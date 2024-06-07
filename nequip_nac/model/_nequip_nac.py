@@ -16,6 +16,8 @@ from nequip.nn.embedding import (
 
 from nequip.model import builder_utils
 
+from nequip_nac.nn import NACProcessor
+
 
 def EnergyNACModel(
     config, initialize: bool, dataset: Optional[AtomicDataset] = None
@@ -49,13 +51,13 @@ def EnergyNACModel(
     # .update also maintains insertion order
     layers.update(
         {
-            # TODO: the next linear throws out all L > 0, don't create them in the last layer of convnet
             # -- output block --
             "conv_to_output_hidden": AtomwiseLinear,
-            "output_hidden_to_scalar": (
+            "output_hidden_to_2scalars_1vector": (
                 AtomwiseLinear,
-                dict(irreps_out="1x0e", out_field=AtomicDataDict.PER_ATOM_ENERGY_KEY),
+                dict(irreps_out="2x0e + 1x1o"),
             ),
+            "process_energy_nac": NACProcessor,
         }
     )
 

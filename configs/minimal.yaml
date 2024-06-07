@@ -12,9 +12,9 @@ dataset_seed: 456
 
 model_builders:
  - SimpleIrrepsConfig         # update the config with all the irreps for the network if using the simplified `l_max` / `num_features` / `parity` syntax
- - nequip_nac.model.EnergyNACModel           # build a NequIP model that also predicts NACs
+ - nequip_nac.model.EnergyNACModel      # build a NequIP model that also predicts NACs
  - PerSpeciesRescale          # add per-atom / per-species scaling and shifting to the NequIP model before the total energy sum
- - StressForceOutput          # wrap the energy model in a module that uses autodifferention to compute the forces
+ - ForceOutput                # wrap the energy model in a module that uses autodifferention to compute the forces
  - RescaleEnergyEtc
 
 # network
