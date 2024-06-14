@@ -20,7 +20,10 @@ git clone https://github.com/cw-tan/nequip-nac.git
 cd nequip-nac
 pip install -e .
 ```
-
+To monitor training with `wandb`, install
+```
+pip install wandb
+```
 Test
 ```
 nequip-train configs/minimal.yaml
