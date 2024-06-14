@@ -17,7 +17,7 @@ pip install -e .
 Clone `nequip-nac` and install
 ```
 git clone https://github.com/cw-tan/nequip-nac.git
-cd nequip_nac
+cd nequip-nac
 pip install -e .
 ```
 
