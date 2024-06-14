@@ -7,7 +7,8 @@ STATE_KEY: Final[str] = "state"
 NAC_KEY: Final[str] = "nac"
 
 register_fields(
-    graph_fields=[STATE_KEY],
+    long_fields=[STATE_KEY],
+    #graph_fields=[STATE_KEY],
     node_fields=[NAC_KEY],
 )
 
