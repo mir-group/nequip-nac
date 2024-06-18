@@ -22,5 +22,5 @@ setup(
         "nequip>=0.6.0",  # TODO: change to 0.6.1 after it's released
     ],
     zip_safe=True,
-    entry_points={"nequip.extension": ["init_always_nac = nequip_nac"]},
+    entry_points={"nequip.extension": ["init_always = nequip_nac"]},
 )
