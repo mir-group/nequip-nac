@@ -52,7 +52,6 @@ def EnergyNACModel(
     layers.update(
         {
             # -- output block --
-            "conv_to_output_hidden": AtomwiseLinear,
             "output_hidden_to_2scalars_1vector": (
                 AtomwiseLinear,
                 dict(irreps_out="2x0e + 1x1o"),

@@ -25,9 +25,10 @@ class NACProcessor(GraphModuleMixin, torch.nn.Module):
                 _keys.NAC_KEY: "1x1o",
             },
         )
-        self.ct = CartTensor("i")
 
     def forward(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
+        # make sure sth is in batch key
+        data = AtomicDataDict.with_batch(data) 
         features = data[AtomicDataDict.NODE_FEATURES_KEY]  # shape (N_atoms, 5)
 
         # map per_frame state to per_node
@@ -49,7 +50,5 @@ class NACProcessor(GraphModuleMixin, torch.nn.Module):
         # TODO: nequip-deploy error
         # RuntimeError:
         #'Tuple[Tuple[int, Tuple[int, int]]]' object has no attribute or method 'to_cartesian'.:
-        data[_keys.NAC_KEY] = self.ct.to_cartesian(
-            torch.narrow(features, -1, 2, 3)
-        )  # shape (N_atoms, 3)
+        data[_keys.NAC_KEY] = torch.narrow(features, -1, 2, 3) # shape (N_atoms, 3), only for l=1 no need for to_cartesian()
         return data
