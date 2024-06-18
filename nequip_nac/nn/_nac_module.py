@@ -1,8 +1,6 @@
 import torch
 import torch.nn.functional
 
-from e3nn.io import CartesianTensor as CartTensor
-
 from nequip.data import AtomicDataDict
 from nequip.nn import GraphModuleMixin
 
@@ -27,8 +25,8 @@ class NACProcessor(GraphModuleMixin, torch.nn.Module):
         )
 
     def forward(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
-        # make sure sth is in batch key
-        data = AtomicDataDict.with_batch(data) 
+        # get data with batch key
+        data = AtomicDataDict.with_batch(data)
         features = data[AtomicDataDict.NODE_FEATURES_KEY]  # shape (N_atoms, 5)
 
         # map per_frame state to per_node
@@ -47,8 +45,7 @@ class NACProcessor(GraphModuleMixin, torch.nn.Module):
 
         # extract and convert NAC from spherical tensor to Cartesian tensor
 
-        # TODO: nequip-deploy error
-        # RuntimeError:
-        #'Tuple[Tuple[int, Tuple[int, int]]]' object has no attribute or method 'to_cartesian'.:
-        data[_keys.NAC_KEY] = torch.narrow(features, -1, 2, 3) # shape (N_atoms, 3), only for l=1 no need for to_cartesian()
+        data[_keys.NAC_KEY] = torch.narrow(
+            features, -1, 2, 3
+        )  # shape (N_atoms, 3), only for l=1 no need for to_cartesian()
         return data
