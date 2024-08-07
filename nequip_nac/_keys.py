@@ -1,15 +1,34 @@
-from typing import Final
+from typing import Final, List
 
 from nequip.data import register_fields
 from nequip.train._key import ABBREV
 
-STATE_KEY: Final[str] = "state"
 NAC_KEY: Final[str] = "nac"
+ENERGY_0_KEY: Final[str] = "energy_0"
+ENERGY_1_KEY: Final[str] = "energy_1"
+FORCE_0_KEY: Final[str] = "force_0"
+FORCE_1_KEY: Final[str] = "force_1"
+PER_ATOM_ENERGY_0_KEY: Final[str] = "per_atom_energy_0"
+PER_ATOM_ENERGY_1_KEY: Final[str] = "per_atom_energy_1"
 
 register_fields(
-    long_fields=[STATE_KEY],
-    #graph_fields=[STATE_KEY],
-    node_fields=[NAC_KEY],
+    graph_fields=[ENERGY_0_KEY, ENERGY_1_KEY],
+    node_fields=[NAC_KEY, FORCE_0_KEY, FORCE_1_KEY, PER_ATOM_ENERGY_0_KEY, PER_ATOM_ENERGY_0_KEY],
 )
+
+ALL_ENERGY_E0_KEYS: Final[List[str]] = [
+    PER_ATOM_ENERGY_0_KEY,
+    ENERGY_0_KEY,
+    FORCE_0_KEY,
+    # NAC_KEY,            # rescale NAC with energy_0
+    # EDGE_ENERGY_KEY,    # not sure if this is needed for scaling
+    # PARTIAL_FORCE_KEY,
+]
+
+ALL_ENERGY_E1_KEYS: Final[List[str]] = [
+    ENERGY_1_KEY,
+    PER_ATOM_ENERGY_1_KEY,
+    FORCE_1_KEY,
+]
 
 ABBREV.update({NAC_KEY: "nac"})
