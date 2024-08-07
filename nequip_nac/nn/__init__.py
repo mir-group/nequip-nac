@@ -1,3 +1,3 @@
 from ._nac_module import NACProcessor
-
-__all__ = [NACProcessor]
+from ._grad_output import NACForceOutput
+__all__ = [NACProcessor, NACForceOutput]

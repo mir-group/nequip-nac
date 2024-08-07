@@ -18,6 +18,8 @@ from nequip.model import builder_utils
 
 from nequip_nac.nn import NACProcessor
 
+from .. import _keys
+
 
 def EnergyNACModel(
     config, initialize: bool, dataset: Optional[AtomicDataset] = None
@@ -60,12 +62,21 @@ def EnergyNACModel(
         }
     )
 
-    layers["total_energy_sum"] = (
+    layers["total_energy_0_sum"] = (
         AtomwiseReduce,
         dict(
             reduce="sum",
-            field=AtomicDataDict.PER_ATOM_ENERGY_KEY,
-            out_field=AtomicDataDict.TOTAL_ENERGY_KEY,
+            field=_keys.PER_ATOM_ENERGY_0_KEY,
+            out_field=_keys.ENERGY_0_KEY,
+        ),
+    )
+
+    layers["total_energy_1_sum"] = (
+        AtomwiseReduce,
+        dict(
+            reduce="sum",
+            field=_keys.PER_ATOM_ENERGY_1_KEY,
+            out_field=_keys.ENERGY_1_KEY,
         ),
     )
 
