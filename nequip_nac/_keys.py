@@ -31,4 +31,11 @@ ALL_ENERGY_E1_KEYS: Final[List[str]] = [
     FORCE_1_KEY,
 ]
 
-ABBREV.update({NAC_KEY: "nac"})
+ABBREV.update({NAC_KEY: "nac",
+               ENERGY_0_KEY: "e0",
+               ENERGY_1_KEY: "e1",
+               FORCE_0_KEY: "f0",
+               FORCE_1_KEY: "f1",
+               PER_ATOM_ENERGY_0_KEY: "E0i",
+               PER_ATOM_ENERGY_1_KEY: "E1i",
+               })
