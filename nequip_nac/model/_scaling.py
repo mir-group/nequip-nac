@@ -68,7 +68,7 @@ def RescaleEnergyEtcNAC(
             f"dataset_{_keys.NAC_KEY}_rms"
         ),
         default_shift=None,
-        default_scale_keys=[],
+        default_scale_keys=[_keys.NAC_KEY],
         default_shift_keys=[],
     )
 
