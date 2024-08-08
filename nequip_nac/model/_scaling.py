@@ -48,8 +48,27 @@ def RescaleEnergyEtcE1(
             else f"dataset_{_keys.ENERGY_1_KEY}_std"
         ),
         default_shift=None,
-        # Not sure about the default_scale_keys
         default_scale_keys=_keys.ALL_ENERGY_E1_KEYS,
+        default_shift_keys=[],
+    )
+
+def RescaleEnergyEtcNAC(
+    model: GraphModuleMixin,
+    config,
+    initialize: bool,
+    dataset: Optional[AtomicDataset] = None,
+):
+    return GlobalRescale(
+        model=model,
+        config=config,
+        dataset=dataset,
+        initialize=initialize,
+        module_prefix="global_rescale_NAC",
+        default_scale=(
+            f"dataset_{_keys.NAC_KEY}_rms"
+        ),
+        default_shift=None,
+        default_scale_keys=[],
         default_shift_keys=[],
     )
 
