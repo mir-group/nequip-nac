@@ -6,7 +6,7 @@
 
 # general
 root: eVperA_two_state_1to5
-run_name: 2state
+run_name: 2state_nl4_b16
 seed: 123
 dataset_seed: 456
 append: true 
@@ -16,26 +16,18 @@ model_dtype: float32
 allow_tf32: true 
 
 model_builders:
- - SimpleIrrepsConfig         # update the config with all the irreps for the network if using the simplified `l_max` / `num_features` / `parity` syntax
+ - SimpleIrrepsConfig                   # update the config with all the irreps for the network if using the simplified `l_max` / `num_features` / `parity` syntax
  - nequip_nac.model.EnergyNACModel      # build a NequIP model that also predicts NACs
- 
-#  - PerSpeciesRescale  # add per-atom / per-species scaling and shifting to the NequIP model before the total energy sum
-#  - RescaleEnergyEtc
-
- - nequip_nac.model.NACPerSpeciesRescaleE0          
- - nequip_nac.model.NACPerSpeciesRescaleE1
- - nequip_nac.model.NACForceOutput                # wrap the energy model in a module that uses autodifferention to compute the forces
- - nequip_nac.model.RescaleEnergyEtcE0
- - nequip_nac.model.RescaleEnergyEtcE1
-
-
-
- 
-
+ - nequip_nac.model.NACPerSpeciesRescaleE0         # shift energy of state 0  
+ - nequip_nac.model.NACPerSpeciesRescaleE1         # shift energy of state 1
+ - nequip_nac.model.NACForceOutput                 # output two energies, two energy gradients as forces, per-atom NAC vectors
+ - nequip_nac.model.RescaleEnergyEtcE0             # rescale energy of state 0 and corresponding forces at state 0
+ - nequip_nac.model.RescaleEnergyEtcE1             # rescale energy of state 1 and corresponding forces at state 0
+ - nequip_nac.model.RescaleEnergyEtcNAC            # rescale NAC
 
 # network
 num_basis: 8
-num_layers: 2    
+num_layers: 4    
 r_max: 4.0
 l_max: 2
 parity: true
@@ -88,10 +80,10 @@ chemical_symbol_to_type:
   H: 2
 
 # logging
-# wandb: true
-# wandb_project: NequIP-NAC #-2state
-# verbose: info
-# log_batch_freq: 10
+wandb: true
+wandb_project: NequIP-NAC #-2state
+verbose: info
+log_batch_freq: 10
 
 # training
 n_train: 9500
@@ -112,14 +104,14 @@ loss_coeffs:
     - 1.0
     - MSELoss
   energy_0:
-    - 1.0
+    - 10.0
     - PerAtomMSELoss
   energy_1:
-    - 1.0
+    - 10.0
     - PerAtomMSELoss
-  # nac:
-  #   - 0.5
-  #   - MSELoss
+  nac:
+    - 0.5
+    - MSELoss
 
 # optimizer
 optimizer_name: Adam
