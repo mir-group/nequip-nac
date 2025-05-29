@@ -13,18 +13,12 @@ lr: 2e-3
 lr_factor: 0.5
 lr_patience: 20
 # === loss weighting ===
+include_keys: [energy_0, energy_1, force_0, force_1, nac]
 E0_coeff: 5
 E1_coeff: 5
 F0_coeff: 1
 F1_coeff: 1
 NAC_coeff: 0.5
-# === map name from xyz data to existing keys ===
-key_mapping:
-  energy_0: energy_0
-  energy_1: energy_1 
-  force_0: force_0
-  force_1: force_1
-  nac: nac 
 
 # === optimizer ===
 optim: torch.optim.AdamW
@@ -43,7 +37,6 @@ hydra:
 # === data params (fixed) ===
 chemical_symbols: ['H', 'C', 'O']
 model_type_names: ${chemical_symbols}
-
 data_transforms:
   - _target_: nequip.data.transforms.NeighborListTransform
     r_max: ${cutoff_radius}
@@ -51,23 +44,15 @@ data_transforms:
     chemical_symbols: ${chemical_symbols}
 
 data:
-  _target_: nequip.data.datamodule.NequIPDataModule
-  train_dataset:
-    _target_: nequip.data.dataset.ASEDataset
-    file_path: ../trial_data/split_two_state_data/train.xyz # Check Data Path
-    transforms: ${data_transforms}
-    key_mapping: ${key_mapping}
-  val_dataset:
-    _target_: nequip.data.dataset.ASEDataset
-    file_path: ../trial_data/split_two_state_data/val.xyz # Check Data Path
-    transforms: ${data_transforms}
-    key_mapping: ${key_mapping}
-  test_dataset:
-    _target_: nequip.data.dataset.ASEDataset
-    file_path: ../trial_data/split_two_state_data/test.xyz # Check Data Path
-    transforms: ${data_transforms}
-    key_mapping: ${key_mapping}
+  _target_: nequip.data.datamodule.ASEDataModule
   seed: ${seed}
+  ## Check Your Data Path
+  train_file_path: ../trial_data/split_two_state_data/train.xyz 
+  val_file_path: ../trial_data/split_two_state_data/val.xyz
+  test_file_path: ../trial_data/split_two_state_data/test.xyz
+  transforms: ${data_transforms}
+  include_keys: ${include_keys}
+  
   train_dataloader:
     _target_: torch.utils.data.DataLoader
     batch_size: ${batch_size}   
@@ -112,8 +97,7 @@ data:
       - field: nac
         metric:
           _target_: nequip.data.RootMeanSquare
-        per_type: true
-        name: per_type_nac_rms
+        name: nac_rms
       - field:
           _target_: nequip.data.NumNeighbors
         metric: 
@@ -296,8 +280,7 @@ training_module:
     per_type_energy_1_shifts_trainable: false
     per_type_energy_1_scales_trainable: false
     # == NAC scales ==
-    per_type_nac_scale: ${training_data_stats:per_type_nac_rms}
-    per_type_nac_scales_trainable: false
+    nac_scale: ${training_data_stats:nac_rms}
     
 
 global_options:
