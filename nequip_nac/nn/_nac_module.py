@@ -10,11 +10,12 @@ from nequip_nac import _keys
 class NACProcessor(GraphModuleMixin, torch.nn.Module):
     def __init__(
         self,
+        nac_scale=1.0,
         irreps_in=None,
         irreps_out=None,
     ):
         super().__init__()
-
+        self.nac_scale = nac_scale
         self._init_irreps(
             irreps_in=irreps_in,
             required_irreps_in=[AtomicDataDict.NODE_FEATURES_KEY],
@@ -41,6 +42,6 @@ class NACProcessor(GraphModuleMixin, torch.nn.Module):
         # Extract the derivative coupling (3D vector)
         derivative_coupling = torch.narrow(features, -1, 2, 3)  # (Num_atoms, 3)
         # Compute the non-adiabatic coupling (NAC) vector
-        data[_keys.NAC_KEY] = delta_e_per_atom * derivative_coupling # (N_atoms, 1) * (N_atoms, 3) -> (N_atoms, 3)
+        data[_keys.NAC_KEY] = self.nac_scale * delta_e_per_atom * derivative_coupling # (N_atoms, 1) * (N_atoms, 3) -> (N_atoms, 3)
         
         return data
