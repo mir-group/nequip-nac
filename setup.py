@@ -14,12 +14,12 @@ del version_dict
 
 setup(
     name=name,
-    version="0.0.1",
+    version=version,
     author="Chuin Wei Tan, Menghang (David) Wang, Albert Musaelian",
     python_requires=">=3.9",
     packages=find_packages(include=[name, _name, _name + ".*"]),
     install_requires=[
-        "nequip>=0.6.0",  # TODO: change to 0.6.1 after it's released
+        "nequip>=0.7.1",
     ],
     zip_safe=True,
     entry_points={"nequip.extension": ["init_always = nequip_nac"]},
