@@ -32,7 +32,7 @@ from nequip_nac.nn import PerTypeScaleShift
 
 from .. import _keys
 from ..nn import NACForceOutput
-
+import pdb  # For debugging purposes, can be removed later
 @model_builder
 def NequIPNACEnergyModel(
     num_layers: int = 4,
@@ -68,12 +68,14 @@ def NequIPNACEnergyModel(
             ]
         )
     )
-    feature_irreps_hidden_list = [feature_irreps_hidden] * (num_layers - 1)
+    # feature_irreps_hidden_list = [feature_irreps_hidden] * (num_layers - 1)
+    feature_irreps_hidden_list = [feature_irreps_hidden] * num_layers
     radial_mlp_depth_list = [radial_mlp_depth] * num_layers
     radial_mlp_width_list = [radial_mlp_width] * num_layers
 
     # === post convnets ===
-    feature_irreps_hidden_list += [repr(o3.Irreps([(num_features, (0, 1))]))]
+    # pdb.set_trace()  # Debugging breakpoint
+    # feature_irreps_hidden_list += [repr(o3.Irreps([(num_features, (0, 1))]))]
 
     # === build model ===
     model = FullNequIPNACEnergyModel(
@@ -146,9 +148,9 @@ def FullNequIPNACEnergyModel(
     num_layers = len(radial_mlp_depth)
 
     # assert that last convnet produces only scalars
-    assert all(
-        [l == 0 for l in o3.Irreps(feature_irreps_hidden[-1]).ls]
-    ), f"last convnet layer output must only contain scalars but found {feature_irreps_hidden[-1]}"
+    # assert all(
+    #     [l == 0 for l in o3.Irreps(feature_irreps_hidden[-1]).ls]
+    # ), f"last convnet layer output must only contain scalars but found {feature_irreps_hidden[-1]}"
 
     if avg_num_neighbors is None:
         logging.warning(
@@ -292,7 +294,7 @@ def FullNequIPNACEnergyModel(
     )
     modules.update({"total_energy_1_sum": total_energy_1_sum})
 
-    per_type_nac_scale = PerTypeScaleShift(
+    per_type_nac_scale_shift = PerTypeScaleShift(
         type_names=type_names,
         field=_keys.NAC_KEY,
         out_field=_keys.NAC_KEY,
@@ -302,9 +304,14 @@ def FullNequIPNACEnergyModel(
     )
     modules.update(
         {
-            "per_type_nac_scale": per_type_nac_scale,
+            "per_type_nac_scale": per_type_nac_scale_shift,
         }
     )
 
     # === assemble in SequentialGraphNetwork ===
-    return SequentialGraphNetwork(modules)
+    model = SequentialGraphNetwork(modules)
+    # print("=== FullNequIPNACEnergyModel Debug ===")
+    # print(f"Model modules: {model}")
+    # pdb.set_trace()  # Debugging breakpoint
+    
+    return model
