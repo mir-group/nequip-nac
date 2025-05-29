@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nequip-nac"
+dynamic = ["version"]
+description = "NequIP-NAC is an open-source framework for predicting non-adiabatic couplings using E(3)-equivariant neural network interatomic potentials."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Chuin Wei Tan"},
+    {name = "Menghang (David) Wang"}, 
+    {name = "Albert Musaelian"},
+]
+dependencies = [
+    "nequip==0.7.1"
+    "torch>=2.2.0",
+    "numpy",
+    "matscipy",
+    "ase",
+    "lmdb",
+    "tqdm",
+    "e3nn>=0.5.6,<0.6.0",
+    "pyyaml",
+    "importlib_metadata; python_version<'3.10'",
+    "hydra-core",
+    "lightning",
+    "torchmetrics>=1.6.0",
+]
+
+[project.urls]
+Repository = "https://github.com/cw-tan/nequip-nac"
+Documentation = "https://nequip.readthedocs.io/"
+
+[tool.setuptools]
+packages = {find = {include = ["nequip_nac", "nequip_nac.*"]}} 
+
+[tool.setuptools.dynamic]  # get version from nequip/_version.py
+version = {attr = "nequip_nac._version.__version__"} 
+
+[tool.flake8]
+max-line-length = 127
+select = ["E", "F", "W", "C"]
+ignore = ["E226", "E501", "E741", "E743", "C901", "W503", "E203"]
+exclude = [
+    ".eggs",
+    "*.egg",
+    "build",
+    "dist",
+    "docs",
+    ".git",
+    "__pycache__",
+    "examples",
+    "tmp"
+]
