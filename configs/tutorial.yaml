@@ -50,22 +50,21 @@ data_transforms:
   - _target_: nequip.data.transforms.ChemicalSpeciesToAtomTypeMapper
     chemical_symbols: ${chemical_symbols}
 
-#/Users/mhwang/MIR_research/ML_NACs/NAC-predict/nequip-nac/trial_data/eVperA_two_state_1to5.xyz
 data:
   _target_: nequip.data.datamodule.NequIPDataModule
   train_dataset:
     _target_: nequip.data.dataset.ASEDataset
-    file_path: /Users/mhwang/MIR_research/ML_NACs/NAC-predict/nequip-nac/trial_data/split_two_state_data/train.xyz
+    file_path: ../trial_data/split_two_state_data/train.xyz # Check Data Path
     transforms: ${data_transforms}
     key_mapping: ${key_mapping}
   val_dataset:
     _target_: nequip.data.dataset.ASEDataset
-    file_path: /Users/mhwang/MIR_research/ML_NACs/NAC-predict/nequip-nac/trial_data/split_two_state_data/val.xyz
+    file_path: ../trial_data/split_two_state_data/val.xyz # Check Data Path
     transforms: ${data_transforms}
     key_mapping: ${key_mapping}
   test_dataset:
     _target_: nequip.data.dataset.ASEDataset
-    file_path: /Users/mhwang/MIR_research/ML_NACs/NAC-predict/nequip-nac/trial_data/split_two_state_data/test.xyz
+    file_path: ../trial_data/split_two_state_data/test.xyz # Check Data Path
     transforms: ${data_transforms}
     key_mapping: ${key_mapping}
   seed: ${seed}
@@ -147,11 +146,11 @@ trainer:
     - _target_: lightning.pytorch.callbacks.LearningRateMonitor
       logging_interval: epoch
 
-  # logger:
-  #   _target_: lightning.pytorch.loggers.wandb.WandbLogger
-  #   save_dir: ${hydra:runtime.output_dir}
-  #   project: NequIP.0.7-NAC
-  #   name: ${run_name}
+  logger:
+    _target_: lightning.pytorch.loggers.wandb.WandbLogger
+    save_dir: ${hydra:runtime.output_dir}
+    project: NequIP.0.7.1-NAC
+    name: ${run_name}
 
 training_module:
   _target_: nequip.train.EMALightningModule
