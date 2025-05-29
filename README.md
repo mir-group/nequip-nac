@@ -1,19 +1,13 @@
 # nequip-nac
-Nonadiabatic coupling vectors with NequIP
+Predicting predicting non-adiabatic couplings (NACs) vectors with NequIP
 
 ## Install 
 Create environment and install `torch`, e.g.
 ```
-conda create -n nequip-nac python=3.11
-pip install torch
+micromamba create -n nequip-nac python=3.10
+micromamba activate nequip-nac
 ```
-Clone `nequip-private` and switch to `cart_tensor` branch before installing
-```
-git clone https://github.com/mir-group/nequip-private.git
-cd nequip-private
-git checkout cart_tensor
-pip install -e .
-```
+
 Clone `nequip-nac` and install
 ```
 git clone https://github.com/cw-tan/nequip-nac.git
@@ -24,7 +18,13 @@ To monitor training with `wandb`, install
 ```
 pip install wandb
 ```
-Test
+## Usage
+Test in the directory of `nequip-nac/configs`:
 ```
-nequip-train configs/minimal.yaml
+nequip-train -cn tutorial
 ```
+A folder named `test-nac1` will be created and a `wandb` project named `NequIP.0.7.1-NAC` will be created.
+
+## Data Format
+We recommend using `extxyz` format to store the data which includes atomic positions, species, energies from two states, forces from two states, and NACs. 
+You can checkout the `trial_data` folder to see an example of the data format. The `extxyz` files can be generated using `ase`.
