@@ -28,7 +28,9 @@ class NACProcessor(GraphModuleMixin, torch.nn.Module):
 
     def forward(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
         # get data with batch key
-        data = AtomicDataDict.with_batch(data)
+        # nequip 0.7.1 expects both BATCH_KEY and NUM_NODES_KEY to be present in batched data.
+        data = AtomicDataDict.with_batch_(data)
+
         features = data[AtomicDataDict.NODE_FEATURES_KEY]  # shape (N_atoms, 5)
 
         data[_keys.PER_ATOM_ENERGY_0_KEY] = features[:, 0].unsqueeze(-1)  # (N_atoms, 1)
