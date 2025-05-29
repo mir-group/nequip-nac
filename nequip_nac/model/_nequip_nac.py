@@ -13,7 +13,7 @@ from nequip.nn import (
     AtomwiseLinear,
     AtomwiseReduce,
     ConvNetLayer,
-    # PerTypeScaleShift,
+    PerTypeScaleShift,
     ApplyFactor,
 )
 from nequip.nn.embedding import (
@@ -28,11 +28,10 @@ from nequip.model.utils import model_builder
 from hydra.utils import instantiate
 
 from nequip_nac.nn import NACProcessor
-from nequip_nac.nn import PerTypeScaleShift
 
 from .. import _keys
 from ..nn import NACForceOutput
-import pdb  # For debugging purposes, can be removed later
+
 @model_builder
 def NequIPNACEnergyModel(
     num_layers: int = 4,
@@ -68,14 +67,10 @@ def NequIPNACEnergyModel(
             ]
         )
     )
-    # feature_irreps_hidden_list = [feature_irreps_hidden] * (num_layers - 1)
+
     feature_irreps_hidden_list = [feature_irreps_hidden] * num_layers
     radial_mlp_depth_list = [radial_mlp_depth] * num_layers
     radial_mlp_width_list = [radial_mlp_width] * num_layers
-
-    # === post convnets ===
-    # pdb.set_trace()  # Debugging breakpoint
-    # feature_irreps_hidden_list += [repr(o3.Irreps([(num_features, (0, 1))]))]
 
     # === build model ===
     model = FullNequIPNACEnergyModel(
@@ -125,8 +120,7 @@ def FullNequIPNACEnergyModel(
     per_type_energy_1_shifts: Optional[Union[float, Sequence[float]]] = None,
     per_type_energy_1_scales_trainable: Optional[bool] = False,
     per_type_energy_1_shifts_trainable: Optional[bool] = False,
-    per_type_nac_scale: Optional[Union[float, Sequence[float]]] = None,
-    per_type_nac_scales_trainable: Optional[bool] = False,
+    nac_scale: Optional[Union[float, Sequence[float]]] = None,
     # == things that generally shouldn't be changed ==
     # convnet
     convnet_resnet: bool = False,
@@ -146,11 +140,6 @@ def FullNequIPNACEnergyModel(
         len(radial_mlp_depth) == len(radial_mlp_width) == len(feature_irreps_hidden)
     ), f"radial_mlp_depth: {radial_mlp_depth}, radial_mlp_width: {radial_mlp_width}, feature_irreps_hidden: {feature_irreps_hidden} should all have the same length"
     num_layers = len(radial_mlp_depth)
-
-    # assert that last convnet produces only scalars
-    # assert all(
-    #     [l == 0 for l in o3.Irreps(feature_irreps_hidden[-1]).ls]
-    # ), f"last convnet layer output must only contain scalars but found {feature_irreps_hidden[-1]}"
 
     if avg_num_neighbors is None:
         logging.warning(
@@ -238,6 +227,7 @@ def FullNequIPNACEnergyModel(
 
     # NAC processor - splits output into 2 per-atom energy and NAC components
     nac_processor = NACProcessor(
+        nac_scale=nac_scale,
         irreps_in=prev_irreps_out,
     )
     modules.update({"nac_processor": nac_processor})
@@ -294,24 +284,7 @@ def FullNequIPNACEnergyModel(
     )
     modules.update({"total_energy_1_sum": total_energy_1_sum})
 
-    per_type_nac_scale_shift = PerTypeScaleShift(
-        type_names=type_names,
-        field=_keys.NAC_KEY,
-        out_field=_keys.NAC_KEY,
-        scales=per_type_nac_scale,
-        scales_trainable=per_type_nac_scales_trainable,
-        irreps_in=nac_processor.irreps_out,
-    )
-    modules.update(
-        {
-            "per_type_nac_scale": per_type_nac_scale_shift,
-        }
-    )
-
     # === assemble in SequentialGraphNetwork ===
     model = SequentialGraphNetwork(modules)
-    # print("=== FullNequIPNACEnergyModel Debug ===")
-    # print(f"Model modules: {model}")
-    # pdb.set_trace()  # Debugging breakpoint
     
     return model
