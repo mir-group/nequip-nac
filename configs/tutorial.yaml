@@ -1,0 +1,307 @@
+run: [train, test]
+
+devices: 1
+num_nodes: 1
+num_workers: 8
+
+# === training params ===
+seed: 8
+batch_size: 4
+max_epochs: 1000
+lr: 2e-3
+# === ReduceOnPlateau
+lr_factor: 0.5
+lr_patience: 20
+# === loss weighting ===
+E0_coeff: 5
+E1_coeff: 5
+F0_coeff: 1
+F1_coeff: 1
+NAC_coeff: 0.5
+# === map name from xyz data to existing keys ===
+key_mapping:
+  energy_0: energy_0
+  energy_1: energy_1 
+  force_0: force_0
+  force_1: force_1
+  nac: nac 
+
+# === optimizer ===
+optim: torch.optim.AdamW
+amsgrad: false 
+weight_decay: 1e-5
+
+# === physical params ===
+cutoff_radius: 4.0
+run_name: test-nac1
+# === hydra runtime directory ===
+run_id: ${now:%Y-%m-%d-%H-%M-%S-%f}
+hydra:
+  run:
+    dir: ./${run_name}/${run_id}
+
+# === data params (fixed) ===
+chemical_symbols: ['H', 'C', 'O']
+model_type_names: ${chemical_symbols}
+
+data_transforms:
+  - _target_: nequip.data.transforms.NeighborListTransform
+    r_max: ${cutoff_radius}
+  - _target_: nequip.data.transforms.ChemicalSpeciesToAtomTypeMapper
+    chemical_symbols: ${chemical_symbols}
+
+#/Users/mhwang/MIR_research/ML_NACs/NAC-predict/nequip-nac/trial_data/eVperA_two_state_1to5.xyz
+data:
+  _target_: nequip.data.datamodule.NequIPDataModule
+  train_dataset:
+    _target_: nequip.data.dataset.ASEDataset
+    file_path: /Users/mhwang/MIR_research/ML_NACs/NAC-predict/nequip-nac/trial_data/split_two_state_data/train.xyz
+    transforms: ${data_transforms}
+    key_mapping: ${key_mapping}
+  val_dataset:
+    _target_: nequip.data.dataset.ASEDataset
+    file_path: /Users/mhwang/MIR_research/ML_NACs/NAC-predict/nequip-nac/trial_data/split_two_state_data/val.xyz
+    transforms: ${data_transforms}
+    key_mapping: ${key_mapping}
+  test_dataset:
+    _target_: nequip.data.dataset.ASEDataset
+    file_path: /Users/mhwang/MIR_research/ML_NACs/NAC-predict/nequip-nac/trial_data/split_two_state_data/test.xyz
+    transforms: ${data_transforms}
+    key_mapping: ${key_mapping}
+  seed: ${seed}
+  train_dataloader:
+    _target_: torch.utils.data.DataLoader
+    batch_size: ${batch_size}   
+    num_workers: ${num_workers}
+    shuffle: true
+  val_dataloader:
+    _target_: torch.utils.data.DataLoader
+    batch_size: ${batch_size}   
+    num_workers: ${num_workers}
+  test_dataloader: 
+    _target_: torch.utils.data.DataLoader
+    batch_size: 1
+    num_workers: ${num_workers}
+  stats_manager:
+    _target_: nequip.data.DataStatisticsManager
+    type_names: ${model_type_names}
+    dataloader_kwargs:
+      batch_size: ${batch_size} 
+    metrics:
+      - field:
+          _target_: nequip.data.PerAtomModifier
+          field: energy_0
+        metric:
+          _target_: nequip.data.Mean
+        name: per_atom_energy_0_mean
+      - field:
+          _target_: nequip.data.PerAtomModifier
+          field: energy_1
+        metric:
+          _target_: nequip.data.Mean
+        name: per_atom_energy_1_mean
+      - field: force_0
+        metric:
+          _target_: nequip.data.RootMeanSquare
+        per_type: true
+        name: per_type_force_0_rms
+      - field: force_1
+        metric:
+          _target_: nequip.data.RootMeanSquare
+        per_type: true
+        name: per_type_force_1_rms
+      - field: nac
+        metric:
+          _target_: nequip.data.RootMeanSquare
+        per_type: true
+        name: per_type_nac_rms
+      - field:
+          _target_: nequip.data.NumNeighbors
+        metric: 
+          _target_: nequip.data.Mean
+        name: num_neighbors_mean
+
+trainer:
+  _target_: lightning.Trainer
+  # devices: ${devices}
+  # num_nodes: ${num_nodes}
+  # strategy: 
+  #   _target_: nequip.train.SimpleDDPStrategy
+  accelerator: cpu
+  enable_checkpointing: true
+  max_time: "30:00:00:00"
+  max_epochs: ${max_epochs}
+  check_val_every_n_epoch: 1
+  log_every_n_steps: 100
+  # gradient_clip_val: 0.2
+  callbacks:
+    - _target_: lightning.pytorch.callbacks.ModelCheckpoint
+      monitor: val0_epoch/weighted_sum
+      dirpath: ${hydra:runtime.output_dir}
+      filename: best
+      save_last: true
+    - _target_: lightning.pytorch.callbacks.EarlyStopping
+      monitor: val0_epoch/weighted_sum
+      min_delta: 1e-4
+      patience: 200
+    - _target_: lightning.pytorch.callbacks.LearningRateMonitor
+      logging_interval: epoch
+
+  # logger:
+  #   _target_: lightning.pytorch.loggers.wandb.WandbLogger
+  #   save_dir: ${hydra:runtime.output_dir}
+  #   project: NequIP.0.7-NAC
+  #   name: ${run_name}
+
+training_module:
+  _target_: nequip.train.EMALightningModule
+  ema_decay: 0.99
+
+  loss:
+    _target_: nequip.train.MetricsManager
+    metrics:
+      - name: E0pA_MSE
+        field:
+          _target_: nequip.data.PerAtomModifier
+          field: energy_0
+        coeff: ${E0_coeff}
+        metric:
+          _target_: nequip.train.MeanSquaredError
+      - name: E1pA_MSE
+        field:
+          _target_: nequip.data.PerAtomModifier
+          field: energy_1
+        coeff: ${E1_coeff}
+        metric:
+          _target_: nequip.train.MeanSquaredError
+      - name: F0_MSE
+        field: force_0
+        coeff: ${F0_coeff}
+        metric:
+          _target_: nequip.train.MeanSquaredError
+      - name: F1_MSE
+        field: force_1
+        coeff: ${F1_coeff}
+        metric:
+          _target_: nequip.train.MeanSquaredError
+      - name: NAC_MSE
+        field: nac
+        coeff: ${NAC_coeff}
+        metric:
+          _target_: nequip.train.MeanSquaredError
+
+  train_metrics:
+    _target_: nequip.train.MetricsManager
+    metrics:
+
+      - name: E0pA_MAE
+        field:
+          _target_: nequip.data.PerAtomModifier
+          field: energy_0
+        coeff: ${E0_coeff}
+        metric:
+          _target_: nequip.train.MeanAbsoluteError
+      
+      - name: E1pA_MAE
+        field:
+          _target_: nequip.data.PerAtomModifier
+          field: energy_1
+        coeff: ${E1_coeff}
+        metric:
+          _target_: nequip.train.MeanAbsoluteError
+      
+      - name: F0_MAE
+        field: force_0
+        coeff: ${F0_coeff}
+        metric:
+          _target_: nequip.train.MeanAbsoluteError
+      
+      - name: F1_MAE
+        field: force_1
+        coeff: ${F1_coeff}
+        metric:
+          _target_: nequip.train.MeanAbsoluteError
+      
+      - name: NAC_MAE
+        field: nac
+        coeff: ${NAC_coeff}
+        metric:
+          _target_: nequip.train.MeanAbsoluteError
+
+      - name: NAC_RMSE
+        field: nac
+        coeff: 0
+        metric:
+          _target_: nequip.train.RootMeanSquaredError
+
+  val_metrics: ${training_module.train_metrics}
+  test_metrics: ${training_module.train_metrics}
+  
+  optimizer:
+    _target_: ${optim}
+    lr: ${lr}
+    weight_decay: ${weight_decay}
+    amsgrad: ${amsgrad}
+
+  lr_scheduler:
+    scheduler:
+      _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+      factor: ${lr_factor}
+      patience: ${lr_patience}
+
+    monitor: val0_epoch/weighted_sum
+    interval: epoch
+    frequency: 1
+
+  model:
+    _target_: nequip_nac.model.NequIPNACModel
+    # compile_mode: compile
+    
+    # === basic model params ===
+    seed: ${seed}
+    model_dtype: float32
+    type_names: ${model_type_names}
+    r_max: ${cutoff_radius}
+
+    # == bessel encoding ==
+    num_bessels: 8                # number of basis functions used in the radial Bessel basis, the default of 8 usually works well
+    bessel_trainable: false       # set true to train the bessel weights (default false)
+    polynomial_cutoff_p: 6        # p-exponent used in polynomial cutoff function, smaller p corresponds to stronger decay with distance
+    
+    # == symmetry layers ==
+    l_max: 2
+    parity: true
+
+    # == convnet layers ==
+    num_layers: 4                 # number of interaction blocks, we find 3-5 to work best
+    num_features: 32              # the multiplicity of the features, 32 is a good default for accurate network, if you want to be more accurate, go larger, if you want to be faster, go lower
+    
+    # == radial network ==
+    radial_mlp_depth: 2           # number of radial layers, usually 1-3 works best, smaller is faster
+    radial_mlp_width: 64          # number of hidden neurons in radial function, smaller is faster
+
+    # see https://nequip.readthedocs.io/en/latest/guide/model.html to understand the following hyperparameters
+
+    # average number of neighbors for edge sum normalization
+    avg_num_neighbors: ${training_data_stats:num_neighbors_mean}
+
+    # == readout scales and shifts ==
+    # == per-type per-atom scales and shifts on state 0 ==
+    per_type_energy_0_shifts: ${training_data_stats:per_atom_energy_0_mean}
+    per_type_energy_0_scales: ${training_data_stats:per_type_force_0_rms}
+    per_type_energy_0_shifts_trainable: false
+    per_type_energy_0_scales_trainable: false
+    # == per-type per-atom scales and shifts on state 1 ==
+    per_type_energy_1_shifts: ${training_data_stats:per_atom_energy_1_mean}
+    per_type_energy_1_scales: ${training_data_stats:per_type_force_1_rms}
+    per_type_energy_1_shifts_trainable: false
+    per_type_energy_1_scales_trainable: false
+    # == NAC scales ==
+    per_type_nac_scale: ${training_data_stats:per_type_nac_rms}
+    per_type_nac_scales_trainable: false
+    
+
+global_options:
+  allow_tf32: false
+
+
