@@ -1,3 +1,3 @@
-from ._nequip_nac import NequIPNACModel, FullNequIPNACEnergyModel
+from .nequip_nac_model import NequIPNACModel, FullNequIPNACEnergyModel
 
-__all__ = [NequIPNACModel, FullNequIPNACEnergyModel]
+__all__ = ["NequIPNACModel", "FullNequIPNACEnergyModel"]
