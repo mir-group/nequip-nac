@@ -133,7 +133,7 @@ trainer:
   logger:
     _target_: lightning.pytorch.loggers.wandb.WandbLogger
     save_dir: ${hydra:runtime.output_dir}
-    project: NequIP.0.7.1-NAC
+    project: NequIP-NAC
     name: ${run_name}
 
 training_module:
