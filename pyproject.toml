@@ -10,29 +10,16 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = {file = "LICENSE"}
 authors = [
+    {name = "Menghang (David) Wang"},
     {name = "Chuin Wei Tan"},
-    {name = "Menghang (David) Wang"}, 
     {name = "Albert Musaelian"},
 ]
 dependencies = [
-    "nequip==0.7.1"
-    "torch>=2.2.0",
-    "numpy",
-    "matscipy",
-    "ase",
-    "lmdb",
-    "tqdm",
-    "e3nn>=0.5.6,<0.6.0",
-    "pyyaml",
-    "importlib_metadata; python_version<'3.10'",
-    "hydra-core",
-    "lightning",
-    "torchmetrics>=1.6.0",
+    "nequip>=0.9.0"
 ]
 
 [project.urls]
-Repository = "https://github.com/cw-tan/nequip-nac"
-Documentation = "https://nequip.readthedocs.io/"
+Repository = "https://github.com/mir-group/nequip-nac"
 
 [tool.setuptools]
 packages = {find = {include = ["nequip_nac", "nequip_nac.*"]}} 
@@ -55,3 +42,6 @@ exclude = [
     "examples",
     "tmp"
 ]
+
+[project.entry-points."nequip.extension"]
+init_always = "nequip_nac"
