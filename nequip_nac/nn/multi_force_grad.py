@@ -1,5 +1,3 @@
-from typing import List, Union, Optional
-
 import torch
 
 from e3nn.o3 import Irreps
@@ -7,9 +5,7 @@ from e3nn.util.jit import compile_mode
 
 from nequip.data import AtomicDataDict
 from nequip.nn import GraphModuleMixin
-from .. import _keys 
 
-import pdb
 
 @compile_mode("script")
 class NACForceOutput(GraphModuleMixin, torch.nn.Module):
@@ -41,7 +37,9 @@ class NACForceOutput(GraphModuleMixin, torch.nn.Module):
         self.force_keys = [force_key_pattern.format(i) for i in range(num_states)]
 
         # Validate that all energy fields are scalars
-        energy_irreps_check = {energy_key: Irreps("0e") for energy_key in self.energy_keys}
+        energy_irreps_check = {
+            energy_key: Irreps("0e") for energy_key in self.energy_keys
+        }
 
         # Check and init irreps
         self._init_irreps(
@@ -53,14 +51,13 @@ class NACForceOutput(GraphModuleMixin, torch.nn.Module):
         # Define irreps of forces for all states
         force_irreps = {force_key: "1x1o" for force_key in self.force_keys}
         self.irreps_out.update(force_irreps)
-        
 
     def forward(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
 
         # Set requires grad for positions
         data[AtomicDataDict.POSITIONS_KEY].requires_grad_(True)
         pos_tensors = data[AtomicDataDict.POSITIONS_KEY]
-        
+
         # Run the energy model
         data = self.func(data)
 
@@ -74,22 +71,20 @@ class NACForceOutput(GraphModuleMixin, torch.nn.Module):
 
             energy_key = self.energy_keys[i]
             force_key = self.force_keys[i]
-            
+
             force_grads = torch.autograd.grad(
                 outputs=[data[energy_key].sum()],
                 inputs=[pos_tensors],
                 create_graph=self.training,
                 retain_graph=retain_graph,
             )[0]
-            
+
             if force_grads is None:
                 raise RuntimeError(f"Failed to compute gradient for state {i}")
-            
+
             data[force_key] = torch.neg(force_grads)
 
         # Unset requires_grad
         data[AtomicDataDict.POSITIONS_KEY].requires_grad_(False)
 
         return data
-
-
