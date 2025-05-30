@@ -1,7 +1,6 @@
 import math
-from typing import Optional, Dict, Union, Sequence, Any, Callable
 
-import torch
+
 import logging
 
 from e3nn import o3
@@ -25,12 +24,12 @@ from nequip.nn.embedding import (
 )
 
 from nequip.model.utils import model_builder
-from hydra.utils import instantiate
-
-from nequip_nac.nn import NACProcessor
 
 from .. import _keys
-from ..nn import NACForceOutput
+from nequip_nac.nn import NACProcessor, NACForceOutput
+
+from typing import Optional, Dict, Union, Sequence, Callable
+
 
 @model_builder
 def NequIPNACEnergyModel(
@@ -43,7 +42,7 @@ def NequIPNACEnergyModel(
     **kwargs,
 ) -> GraphModel:
     """NequIP GNN model that predicts energies for two electronic states and NACs.
-    
+
     This follows the pattern of NequIPGNNEnergyModel but with modifications for NAC prediction.
     """
     # === sanity checks and warnings ===
@@ -87,7 +86,7 @@ def NequIPNACEnergyModel(
 @model_builder
 def NequIPNACModel(**kwargs) -> GraphModel:
     """NequIP GNN model that predicts energies, forces, and NACs.
-    
+
     This is the main model builder that should be used in configuration files.
     """
     return NACForceOutput(func=NequIPNACEnergyModel(**kwargs))
@@ -222,16 +221,13 @@ def FullNequIPNACEnergyModel(
         out_field=AtomicDataDict.NODE_FEATURES_KEY,
         irreps_in=prev_irreps_out,
     )
-    prev_irreps_out = nac_readout.irreps_out
-    modules.update({"nac_readout": nac_readout})
-
     # NAC processor - splits output into 2 per-atom energy and NAC components
     nac_processor = NACProcessor(
         nac_scale=nac_scale,
-        irreps_in=prev_irreps_out,
+        irreps_in=nac_readout.irreps_out,
     )
-    modules.update({"nac_processor": nac_processor})
-    
+    modules.update({"nac_readout": nac_readout, "nac_processor": nac_processor})
+
     # === Per-type scaling and shifting for state 0 ===
     per_type_energy_0_scale_shift = PerTypeScaleShift(
         type_names=type_names,
@@ -286,5 +282,5 @@ def FullNequIPNACEnergyModel(
 
     # === assemble in SequentialGraphNetwork ===
     model = SequentialGraphNetwork(modules)
-    
+
     return model
