@@ -7,9 +7,12 @@ from nequip_nac import _keys
 
 
 class NACProcessor(GraphModuleMixin, torch.nn.Module):
+
+    nac_scale: float
+
     def __init__(
         self,
-        nac_scale=1.0,
+        nac_scale: float = 1.0,
         irreps_in=None,
         irreps_out=None,
     ):

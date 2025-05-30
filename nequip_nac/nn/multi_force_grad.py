@@ -55,8 +55,8 @@ class NACForceOutput(GraphModuleMixin, torch.nn.Module):
     def forward(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
 
         # Set requires grad for positions
-        data[AtomicDataDict.POSITIONS_KEY].requires_grad_(True)
-        pos_tensors = data[AtomicDataDict.POSITIONS_KEY]
+        pos = data[AtomicDataDict.POSITIONS_KEY]
+        pos.requires_grad_(True)
 
         # Run the energy model
         data = self.func(data)
@@ -69,12 +69,9 @@ class NACForceOutput(GraphModuleMixin, torch.nn.Module):
             else:
                 retain_graph = self.training
 
-            energy_key = self.energy_keys[i]
-            force_key = self.force_keys[i]
-
             force_grads = torch.autograd.grad(
-                outputs=[data[energy_key].sum()],
-                inputs=[pos_tensors],
+                outputs=[data[self.energy_keys[i]].sum()],
+                inputs=[pos],
                 create_graph=self.training,
                 retain_graph=retain_graph,
             )[0]
@@ -82,9 +79,9 @@ class NACForceOutput(GraphModuleMixin, torch.nn.Module):
             if force_grads is None:
                 raise RuntimeError(f"Failed to compute gradient for state {i}")
 
-            data[force_key] = torch.neg(force_grads)
+            data[self.force_keys[i]] = torch.neg(force_grads)
 
         # Unset requires_grad
-        data[AtomicDataDict.POSITIONS_KEY].requires_grad_(False)
+        pos.requires_grad_(False)
 
         return data

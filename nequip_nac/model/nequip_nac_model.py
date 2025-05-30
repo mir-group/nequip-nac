@@ -111,15 +111,15 @@ def FullNequIPNACEnergyModel(
     # edge sum normalization
     avg_num_neighbors: Optional[float] = None,
     # per atom energy params
-    per_type_energy_0_scales: Optional[Union[float, Sequence[float]]] = None,
-    per_type_energy_0_shifts: Optional[Union[float, Sequence[float]]] = None,
+    per_type_energy_0_scales: Optional[Union[float, Dict[str, float]]] = None,
+    per_type_energy_0_shifts: Optional[Union[float, Dict[str, float]]] = None,
     per_type_energy_0_scales_trainable: Optional[bool] = False,
     per_type_energy_0_shifts_trainable: Optional[bool] = False,
-    per_type_energy_1_scales: Optional[Union[float, Sequence[float]]] = None,
-    per_type_energy_1_shifts: Optional[Union[float, Sequence[float]]] = None,
+    per_type_energy_1_scales: Optional[Union[float, Dict[str, float]]] = None,
+    per_type_energy_1_shifts: Optional[Union[float, Dict[str, float]]] = None,
     per_type_energy_1_scales_trainable: Optional[bool] = False,
     per_type_energy_1_shifts_trainable: Optional[bool] = False,
-    nac_scale: Optional[Union[float, Sequence[float]]] = None,
+    nac_scale: Union[float, Dict[str, float]] = 1.0,
     # == things that generally shouldn't be changed ==
     # convnet
     convnet_resnet: bool = False,
