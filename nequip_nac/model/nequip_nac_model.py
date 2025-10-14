@@ -263,7 +263,7 @@ def FullNequIPNACEnergyModel(
         shifts=per_type_energy_1_shifts,
         scales_trainable=per_type_energy_1_scales_trainable,
         shifts_trainable=per_type_energy_1_shifts_trainable,
-        irreps_in=nac_processor.irreps_out,
+        irreps_in=total_energy_0_sum.irreps_out,
     )
 
     modules.update(
