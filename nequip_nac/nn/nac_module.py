@@ -40,7 +40,7 @@ class NACProcessor(GraphModuleMixin, torch.nn.Module):
             data[_keys.PER_ATOM_ENERGY_0_KEY] + delta_e_per_atom
         )
         # Extract the derivative coupling (3D vector)
-        derivative_coupling = torch.narrow(features, -1, 2, 3)  # (Num_atoms, 3)
+        derivative_coupling = torch.narrow(features, 1, 2, 3)  # (Num_atoms, 3)
         # Compute the non-adiabatic coupling (NAC) vector
         data[_keys.NAC_KEY] = (
             self.nac_scale * delta_e_per_atom * derivative_coupling
