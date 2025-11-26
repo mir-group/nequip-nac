@@ -55,6 +55,7 @@ class NACForceOutput(GraphModuleMixin, torch.nn.Module):
     def forward(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
         # Set requires grad for positions
         pos = data[AtomicDataDict.POSITIONS_KEY]
+        did_pos_req_grad: bool = pos.requires_grad
         pos.requires_grad_(True)
 
         # Run the energy model
@@ -80,7 +81,8 @@ class NACForceOutput(GraphModuleMixin, torch.nn.Module):
 
             data[self.force_keys[i]] = torch.neg(force_grads)
 
-        # Unset requires_grad
-        pos.requires_grad_(False)
+        # don't give later modules one that does
+        if not did_pos_req_grad:
+            pos.requires_grad_(False)
 
         return data
