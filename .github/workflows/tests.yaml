@@ -10,9 +10,29 @@ on:
       - main
       - develop
 
-jobs:
+concurrency:
+  # github.workflow will be the name of the workflow, e.g. "Run Tests"
+  # github.ref will be the branch or tag ref, e.g. "refs/heads/main" or, for a PR, "refs/pull/123/merge"
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
-  tests:
+# yamllint disable rule:line-length
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install pre-commit
+        run: pip install pre-commit
+      - name: Run pre-commit
+        run: pre-commit run --all-files --show-diff-on-failure
+
+  run-tests:
+    needs: lint
     runs-on: ${{ github.event.repository.private == true && 'self-hosted' || 'ubuntu-latest' }}
     strategy:
       matrix:
@@ -24,17 +44,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Python
         run: |
-          apt update && apt install -y python3 python3-pip
+          apt update && apt install -y python3 python3-pip git
           python3 -m pip install --upgrade pip
-      - name: Linting
-        run: |
-          pip install ruff yamllint
-          ruff check .
-          ruff format --check .
-          yamllint .
-      - name: Install git
-        run: |
-          apt install git -y
       - name: Clone NequIP packages
         uses: mir-group/nequip-gh-actions/clone@main
         with:
@@ -72,3 +83,4 @@ jobs:
         if: always()
         run: |
           rm -rf ./nequip
+# yamllint enable
