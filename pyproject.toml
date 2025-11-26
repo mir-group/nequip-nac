@@ -7,7 +7,7 @@ name = "nequip-nac"
 dynamic = ["version"]
 description = "NequIP-NAC is an open-source framework for predicting non-adiabatic couplings using E(3)-equivariant neural network interatomic potentials."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = {file = "LICENSE"}
 authors = [
     {name = "Menghang (David) Wang"},
@@ -15,7 +15,7 @@ authors = [
     {name = "Albert Musaelian"},
 ]
 dependencies = [
-    "nequip>=0.9.0"
+    "nequip>=0.16.0"
 ]
 
 [project.urls]
