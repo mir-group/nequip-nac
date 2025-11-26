@@ -1,0 +1,12 @@
+extends: default
+
+ignore: |
+  lightning_logs/
+  outputs/
+  trial_data/
+
+rules:
+  line-length:
+    max: 127
+  document-start: disable
+  new-lines: disable

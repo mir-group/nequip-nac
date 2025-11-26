@@ -27,6 +27,35 @@ packages = {find = {include = ["nequip_nac", "nequip_nac.*"]}}
 [tool.setuptools.dynamic]  # get version from nequip/_version.py
 version = {attr = "nequip_nac._version.__version__"} 
 
+[tool.ruff]
+line-length = 88
+exclude = [
+    ".eggs",
+    "*.egg",
+    "build",
+    "dist",
+    "docs",
+    ".git",
+    "__pycache__",
+    "examples",
+    "tmp"
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "C90"]
+ignore = ["E226", "E501", "E741", "E743", "C901", "E203"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
 [tool.flake8]
 max-line-length = 127
 select = ["E", "F", "W", "C"]
