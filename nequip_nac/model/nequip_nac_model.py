@@ -28,22 +28,23 @@ from nequip.model.utils import model_builder
 from .. import _keys
 from nequip_nac.nn import NACProcessor, NACForceOutput
 
-from typing import Optional, Dict, Union, Sequence, Callable
+from typing import Optional, Dict, List, Union, Sequence, Callable
 
 
 @model_builder
-def NequIPNACEnergyModel(
+def NequIPNACModel(
     num_layers: int = 4,
     l_max: int = 1,
     parity: bool = True,
-    num_features: int = 32,
+    num_features: Union[int, List[int]] = 32,
+    type_embed_num_features: Optional[int] = None,
     radial_mlp_depth: int = 2,
     radial_mlp_width: int = 64,
     **kwargs,
 ) -> GraphModel:
-    """NequIP GNN model that predicts energies for two electronic states and NACs.
+    """NequIP GNN model that predicts energies, forces, and NACs.
 
-    This follows the pattern of NequIPGNNEnergyModel but with modifications for NAC prediction.
+    This is the main model builder that should be used in configuration files.
     """
     # === sanity checks and warnings ===
     assert num_layers > 0, (
@@ -51,8 +52,20 @@ def NequIPNACEnergyModel(
     )
 
     # === spherical harmonics ===
-    irreps_edge_sh = repr(
-        o3.Irreps.spherical_harmonics(lmax=l_max, p=-1 if parity else 1)
+    irreps_edge_sh = repr(o3.Irreps.spherical_harmonics(lmax=l_max))
+
+    # === handle `num_features` ===
+    if isinstance(num_features, int):
+        num_features = [num_features] * (l_max + 1)
+    assert len(num_features) == l_max + 1, (
+        f"`num_features` should be of length `l_max + 1` ({l_max + 1}), but found `num_features={num_features}` with {len(num_features)} entries."
+    )
+
+    # === type embedding ===
+    type_embed_num_features = (
+        type_embed_num_features
+        if type_embed_num_features is not None
+        else num_features[0]
     )
 
     # === convnet ===
@@ -60,9 +73,11 @@ def NequIPNACEnergyModel(
     feature_irreps_hidden = repr(
         o3.Irreps(
             [
-                (num_features, (l, p))
-                for p in ((1, -1) if parity else (1,))
+                (num_features[l], (l, p))
                 for l in range(l_max + 1)
+                for p in (
+                    (1, -1) if parity else ((1,) if l % 2 == 0 else (-1,))
+                )  # p = 1 for even l, -1 for odd l, with parity = False
             ]
         )
     )
@@ -74,22 +89,13 @@ def NequIPNACEnergyModel(
     # === build model ===
     model = FullNequIPNACEnergyModel(
         irreps_edge_sh=irreps_edge_sh,
-        type_embed_num_features=num_features,
+        type_embed_num_features=type_embed_num_features,
         feature_irreps_hidden=feature_irreps_hidden_list,
         radial_mlp_depth=radial_mlp_depth_list,
         radial_mlp_width=radial_mlp_width_list,
         **kwargs,
     )
     return model
-
-
-@model_builder
-def NequIPNACModel(**kwargs) -> GraphModel:
-    """NequIP GNN model that predicts energies, forces, and NACs.
-
-    This is the main model builder that should be used in configuration files.
-    """
-    return NACForceOutput(func=NequIPNACEnergyModel(**kwargs))
 
 
 @model_builder
@@ -285,4 +291,4 @@ def FullNequIPNACEnergyModel(
     # === assemble in SequentialGraphNetwork ===
     model = SequentialGraphNetwork(modules)
 
-    return model
+    return NACForceOutput(model)
