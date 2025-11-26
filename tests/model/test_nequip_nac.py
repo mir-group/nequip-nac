@@ -44,6 +44,24 @@ class TestNequIPNAC(EnergyModelTestsMixin):
     def strict_locality(self):
         return False
 
+    def total_energy_keys(self):
+        """Override to test NAC-specific energy keys."""
+        from nequip_nac._keys import ENERGY_0_KEY, ENERGY_1_KEY
+
+        return [ENERGY_0_KEY, ENERGY_1_KEY]
+
+    def per_atom_energy_keys(self):
+        """Override to test NAC-specific per-atom energy keys."""
+        from nequip_nac._keys import PER_ATOM_ENERGY_0_KEY, PER_ATOM_ENERGY_1_KEY
+
+        return [PER_ATOM_ENERGY_0_KEY, PER_ATOM_ENERGY_1_KEY]
+
+    def force_keys(self):
+        """Override to test NAC-specific force keys."""
+        from nequip_nac._keys import FORCE_0_KEY, FORCE_1_KEY
+
+        return [FORCE_0_KEY, FORCE_1_KEY]
+
     @pytest.fixture(scope="class")
     def nequip_compile_tol(self, model_dtype):
         return {"float32": 5e-5, "float64": 1e-10}[model_dtype]
