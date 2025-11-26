@@ -46,9 +46,9 @@ def NequIPNACEnergyModel(
     This follows the pattern of NequIPGNNEnergyModel but with modifications for NAC prediction.
     """
     # === sanity checks and warnings ===
-    assert (
-        num_layers > 0
-    ), f"at least one convnet layer required, but found `num_layers={num_layers}`"
+    assert num_layers > 0, (
+        f"at least one convnet layer required, but found `num_layers={num_layers}`"
+    )
 
     # === spherical harmonics ===
     irreps_edge_sh = repr(
@@ -129,15 +129,17 @@ def FullNequIPNACEnergyModel(
 ) -> GraphModel:
     """NequIP GNN model that predicts energies for two electronic states and NACs based on a more extensive set of arguments."""
     # === sanity checks and warnings ===
-    assert all(
-        tn.isalnum() for tn in type_names
-    ), "`type_names` must contain only alphanumeric characters"
+    assert all(tn.isalnum() for tn in type_names), (
+        "`type_names` must contain only alphanumeric characters"
+    )
 
     # require every convnet layer to be specified explicitly in a list
     # infer num_layers from the list size
     assert (
         len(radial_mlp_depth) == len(radial_mlp_width) == len(feature_irreps_hidden)
-    ), f"radial_mlp_depth: {radial_mlp_depth}, radial_mlp_width: {radial_mlp_width}, feature_irreps_hidden: {feature_irreps_hidden} should all have the same length"
+    ), (
+        f"radial_mlp_depth: {radial_mlp_depth}, radial_mlp_width: {radial_mlp_width}, feature_irreps_hidden: {feature_irreps_hidden} should all have the same length"
+    )
     num_layers = len(radial_mlp_depth)
 
     if avg_num_neighbors is None:

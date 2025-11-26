@@ -53,7 +53,6 @@ class NACForceOutput(GraphModuleMixin, torch.nn.Module):
         self.irreps_out.update(force_irreps)
 
     def forward(self, data: AtomicDataDict.Type) -> AtomicDataDict.Type:
-
         # Set requires grad for positions
         pos = data[AtomicDataDict.POSITIONS_KEY]
         pos.requires_grad_(True)

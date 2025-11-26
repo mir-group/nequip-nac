@@ -22,7 +22,7 @@ NAC_coeff: 5
 
 # === optimizer ===
 optim: torch.optim.AdamW
-amsgrad: false 
+amsgrad: false
 weight_decay: 1e-5
 
 # === physical params ===
@@ -47,22 +47,22 @@ data:
   _target_: nequip.data.datamodule.ASEDataModule
   seed: ${seed}
   ## Check Your Data Path
-  train_file_path: ../trial_data/split_two_state_data/train.xyz 
+  train_file_path: ../trial_data/split_two_state_data/train.xyz
   val_file_path: ../trial_data/split_two_state_data/val.xyz
   test_file_path: ../trial_data/split_two_state_data/test.xyz
   transforms: ${data_transforms}
   include_keys: ${include_keys}
-  
+
   train_dataloader:
     _target_: torch.utils.data.DataLoader
-    batch_size: ${batch_size}   
+    batch_size: ${batch_size}
     num_workers: ${num_workers}
     shuffle: true
   val_dataloader:
     _target_: torch.utils.data.DataLoader
-    batch_size: ${batch_size}   
+    batch_size: ${batch_size}
     num_workers: ${num_workers}
-  test_dataloader: 
+  test_dataloader:
     _target_: torch.utils.data.DataLoader
     batch_size: 1
     num_workers: ${num_workers}
@@ -70,7 +70,7 @@ data:
     _target_: nequip.data.DataStatisticsManager
     type_names: ${model_type_names}
     dataloader_kwargs:
-      batch_size: ${batch_size} 
+      batch_size: ${batch_size}
     metrics:
       - field:
           _target_: nequip.data.PerAtomModifier
@@ -100,7 +100,7 @@ data:
         name: nac_rms
       - field:
           _target_: nequip.data.NumNeighbors
-        metric: 
+        metric:
           _target_: nequip.data.Mean
         name: num_neighbors_mean
 
@@ -108,7 +108,7 @@ trainer:
   _target_: lightning.Trainer
   # devices: ${devices}
   # num_nodes: ${num_nodes}
-  # strategy: 
+  # strategy:
   #   _target_: nequip.train.SimpleDDPStrategy
   accelerator: cpu
   enable_checkpointing: true
@@ -184,7 +184,7 @@ training_module:
         coeff: ${E0_coeff}
         metric:
           _target_: nequip.train.MeanAbsoluteError
-      
+
       - name: E1pA_MAE
         field:
           _target_: nequip.data.PerAtomModifier
@@ -192,19 +192,19 @@ training_module:
         coeff: ${E1_coeff}
         metric:
           _target_: nequip.train.MeanAbsoluteError
-      
+
       - name: F0_MAE
         field: force_0
         coeff: ${F0_coeff}
         metric:
           _target_: nequip.train.MeanAbsoluteError
-      
+
       - name: F1_MAE
         field: force_1
         coeff: ${F1_coeff}
         metric:
           _target_: nequip.train.MeanAbsoluteError
-      
+
       - name: NAC_MAE
         field: nac
         coeff: ${NAC_coeff}
@@ -219,7 +219,7 @@ training_module:
 
   val_metrics: ${training_module.train_metrics}
   test_metrics: ${training_module.train_metrics}
-  
+
   optimizer:
     _target_: ${optim}
     lr: ${lr}
@@ -238,11 +238,8 @@ training_module:
 
   model:
     _target_: nequip_nac.model.NequIPNACModel
-    
-    # If you have PyTorch >= 2.6.0 installed, and are training on GPUs, the following line uses torch.compile to speed up training
-    # for more details, see https://nequip.readthedocs.io/en/latest/guide/advanced_training.html#pytorch-2-0-compiled-training
     compile_mode: compile
-    
+
     # === basic model params ===
     seed: ${seed}
     model_dtype: float32
@@ -250,18 +247,20 @@ training_module:
     r_max: ${cutoff_radius}
 
     # == bessel encoding ==
-    num_bessels: 8                # number of basis functions used in the radial Bessel basis, the default of 8 usually works well
-    bessel_trainable: false       # set true to train the bessel weights (default false)
-    polynomial_cutoff_p: 6        # p-exponent used in polynomial cutoff function, smaller p corresponds to stronger decay with distance
-    
+    # the following defaults generally work well
+    num_bessels: 8                # number of basis functions used in the radial Bessel basis
+    bessel_trainable: false       # set true to train the bessel weights
+    polynomial_cutoff_p: 6        # p-exponent used in polynomial cutoff function
+
     # == symmetry layers ==
     l_max: 2
     parity: true
 
     # == convnet layers ==
     num_layers: 4                 # number of interaction blocks, we find 3-5 to work best
-    num_features: 32              # the multiplicity of the features, 32 is a good default for accurate network, if you want to be more accurate, go larger, if you want to be faster, go lower
-    
+    num_features: 32              # the multiplicity of the features
+    # ^ if you want to be more accurate, go larger, if you want to be faster, go lower
+
     # == radial network ==
     radial_mlp_depth: 2           # number of radial layers, usually 1-3 works best, smaller is faster
     radial_mlp_width: 64          # number of hidden neurons in radial function, smaller is faster
@@ -284,9 +283,7 @@ training_module:
     per_type_energy_1_scales_trainable: false
     # == NAC scales ==
     nac_scale: ${training_data_stats:nac_rms}
-    
+
 
 global_options:
   allow_tf32: false
-
-

@@ -1,7 +1,5 @@
 import pytest
-import torch
-import copy
-from nequip.utils.unittests.model_tests import BaseEnergyModelTests
+from nequip.utils.unittests.model_tests_basic import EnergyModelTestsMixin
 from nequip.utils.versions import _TORCH_GE_2_7
 
 try:
@@ -39,7 +37,7 @@ minimal_config1 = dict(
 )
 
 
-class TestNequIPNAC(BaseEnergyModelTests):
+class TestNequIPNAC(EnergyModelTestsMixin):
     """Test suite for NequIP-NAC models"""
 
     @pytest.fixture
@@ -51,13 +49,6 @@ class TestNequIPNAC(BaseEnergyModelTests):
         return {"float32": 5e-5, "float64": 1e-10}[model_dtype]
 
     @pytest.fixture(
-        params=[True],
-        scope="class",
-    )
-    def parity(self, request):
-        return request.param
-
-    @pytest.fixture(
         params=[
             minimal_config0,
             minimal_config1,
@@ -67,11 +58,9 @@ class TestNequIPNAC(BaseEnergyModelTests):
     def config(
         self,
         request,
-        parity,
     ):
         config = request.param
         config = config.copy()
-        config.update({"parity": parity})
         return config
 
     @pytest.fixture(
@@ -131,18 +120,9 @@ class TestNequIPNAC(BaseEnergyModelTests):
         params=[None]
         + (["enable_OpenEquivariance"] if _TORCH_GE_2_7 and _OEQ_INSTALLED else []),
     )
-
     def test_import(self):
         """Test that the nequip_nac module can be imported"""
         import nequip_nac
-        from nequip_nac.model import NequIPNACModel
-        from nequip_nac._keys import (
-            NAC_KEY,
-            ENERGY_0_KEY,
-            ENERGY_1_KEY,
-            FORCE_0_KEY,
-            FORCE_1_KEY,
-        )
 
         assert hasattr(nequip_nac, "__version__")
 

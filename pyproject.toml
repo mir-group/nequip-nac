@@ -22,10 +22,10 @@ dependencies = [
 Repository = "https://github.com/mir-group/nequip-nac"
 
 [tool.setuptools]
-packages = {find = {include = ["nequip_nac", "nequip_nac.*"]}} 
+packages = {find = {include = ["nequip_nac", "nequip_nac.*"]}}
 
 [tool.setuptools.dynamic]  # get version from nequip/_version.py
-version = {attr = "nequip_nac._version.__version__"} 
+version = {attr = "nequip_nac._version.__version__"}
 
 [tool.ruff]
 line-length = 88
