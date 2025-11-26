@@ -1,6 +1,6 @@
+from nequip.data._key_registry import register_fields, ABBREV
 from typing import Final, List
 
-from nequip.data import register_fields, ABBREV
 
 NAC_KEY: Final[str] = "nac"
 ENERGY_0_KEY: Final[str] = "energy_0"
