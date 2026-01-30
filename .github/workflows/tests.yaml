@@ -31,21 +31,26 @@ jobs:
       - name: Run pre-commit
         run: pre-commit run --all-files --show-diff-on-failure
 
-  run-tests:
+  tests:
     needs: lint
     runs-on: ${{ github.event.repository.private == true && 'self-hosted' || 'ubuntu-latest' }}
     strategy:
       matrix:
         torch-version: [2.2.0, "2.*"]
     container:
-      image: nvidia/cuda:12.4.1-cudnn-devel-ubuntu22.04
+      image: nvidia/cuda:12.6.1-cudnn-devel-ubuntu24.04
       options: ${{ github.event.repository.private && '--gpus all' || ' ' }}
     steps:
       - uses: actions/checkout@v4
-      - name: Install Python
+      - name: Install Python and create venv
         run: |
-          apt update && apt install -y python3 python3-pip git
-          python3 -m pip install --upgrade pip
+          apt update && apt install -y python3 python3-pip python3-venv git
+          python3 -m venv /opt/venv
+          echo "/opt/venv/bin" >> $GITHUB_PATH
+      - name: Check Python version
+        run: |
+          python3 --version
+          which python3
       - name: Clone NequIP packages
         uses: mir-group/nequip-gh-actions/clone@main
         with:
@@ -66,6 +71,10 @@ jobs:
       - name: Install Test Dependencies
         run: |
           pip install setuptools wheel pytest pytest-xdist[psutil]
+          # Pin numpy<2 and matscipy 1.1.1 for torch 2.2 to avoid compatibility issues
+          if [ "${{ matrix.torch-version }}" = "2.2.0" ]; then
+            pip install "numpy<2" "matscipy==1.1.1"
+          fi
           # install nequip packages
           pip install --upgrade-strategy only-if-needed ./nequip
           pip install --upgrade-strategy only-if-needed .
@@ -82,5 +91,5 @@ jobs:
       - name: Clean up temporary files
         if: always()
         run: |
-          rm -rf ./nequip
+          rm -rf ./nequip-nac
 # yamllint enable
