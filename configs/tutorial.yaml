@@ -68,42 +68,10 @@ data:
     batch_size: 1
     num_workers: ${num_workers}
   stats_manager:
-    _target_: nequip.data.DataStatisticsManager
+    _target_: nequip_nac.data.TwoStateDataStatisticsManager
     type_names: ${model_type_names}
     dataloader_kwargs:
       batch_size: ${batch_size}
-    metrics:
-      - field:
-          _target_: nequip.data.PerAtomModifier
-          field: energy_0
-        metric:
-          _target_: nequip.data.Mean
-        name: per_atom_energy_0_mean
-      - field:
-          _target_: nequip.data.PerAtomModifier
-          field: energy_1
-        metric:
-          _target_: nequip.data.Mean
-        name: per_atom_energy_1_mean
-      - field: force_0
-        metric:
-          _target_: nequip.data.RootMeanSquare
-        per_type: true
-        name: per_type_force_0_rms
-      - field: force_1
-        metric:
-          _target_: nequip.data.RootMeanSquare
-        per_type: true
-        name: per_type_force_1_rms
-      - field: nac
-        metric:
-          _target_: nequip.data.RootMeanSquare
-        name: nac_rms
-      - field:
-          _target_: nequip.data.NumNeighbors
-        metric:
-          _target_: nequip.data.Mean
-        name: num_neighbors_mean
 
 trainer:
   _target_: lightning.Trainer
@@ -142,81 +110,24 @@ training_module:
   ema_decay: 0.99
 
   loss:
-    _target_: nequip.train.MetricsManager
-    metrics:
-      - name: E0pA_MSE
-        field:
-          _target_: nequip.data.PerAtomModifier
-          field: energy_0
-        coeff: ${E0_coeff}
-        metric:
-          _target_: nequip.train.MeanSquaredError
-      - name: E1pA_MSE
-        field:
-          _target_: nequip.data.PerAtomModifier
-          field: energy_1
-        coeff: ${E1_coeff}
-        metric:
-          _target_: nequip.train.MeanSquaredError
-      - name: F0_MSE
-        field: force_0
-        coeff: ${F0_coeff}
-        metric:
-          _target_: nequip.train.MeanSquaredError
-      - name: F1_MSE
-        field: force_1
-        coeff: ${F1_coeff}
-        metric:
-          _target_: nequip.train.MeanSquaredError
-      - name: NAC_MSE
-        field: nac
-        coeff: ${NAC_coeff}
-        metric:
-          _target_: nequip.train.MeanSquaredError
+    _target_: nequip_nac.train.TwoStateEnergyForceLoss
+    per_atom_energy: true
+    coeffs:
+      per_atom_energy_0: ${E0_coeff}
+      per_atom_energy_1: ${E1_coeff}
+      forces_0: ${F0_coeff}
+      forces_1: ${F1_coeff}
+      nac: ${NAC_coeff}
 
   train_metrics:
-    _target_: nequip.train.MetricsManager
-    metrics:
-
-      - name: E0pA_MAE
-        field:
-          _target_: nequip.data.PerAtomModifier
-          field: energy_0
-        coeff: ${E0_coeff}
-        metric:
-          _target_: nequip.train.MeanAbsoluteError
-
-      - name: E1pA_MAE
-        field:
-          _target_: nequip.data.PerAtomModifier
-          field: energy_1
-        coeff: ${E1_coeff}
-        metric:
-          _target_: nequip.train.MeanAbsoluteError
-
-      - name: F0_MAE
-        field: force_0
-        coeff: ${F0_coeff}
-        metric:
-          _target_: nequip.train.MeanAbsoluteError
-
-      - name: F1_MAE
-        field: force_1
-        coeff: ${F1_coeff}
-        metric:
-          _target_: nequip.train.MeanAbsoluteError
-
-      - name: NAC_MAE
-        field: nac
-        coeff: ${NAC_coeff}
-        metric:
-          _target_: nequip.train.MeanAbsoluteError
-
-      - name: NAC_RMSE
-        field: nac
-        coeff: 0
-        metric:
-          _target_: nequip.train.RootMeanSquaredError
+    _target_: nequip_nac.train.TwoStateEnergyForceMetrics
+    per_atom_energy: true
+    coeffs:
+      per_atom_energy_0: ${E0_coeff}
+      per_atom_energy_1: ${E1_coeff}
+      forces_0: ${F0_coeff}
+      forces_1: ${F1_coeff}
+      nac: ${NAC_coeff}
 
   val_metrics: ${training_module.train_metrics}
   test_metrics: ${training_module.train_metrics}
