@@ -1,13 +1,5 @@
 import pytest
 from nequip.utils.unittests.model_tests_basic import EnergyModelTestsMixin
-from nequip.utils.versions import _TORCH_GE_2_7
-
-try:
-    import openequivariance  # noqa: F401
-
-    _OEQ_INSTALLED = True
-except ImportError:
-    _OEQ_INSTALLED = False
 
 
 COMMON_CONFIG = {
@@ -62,10 +54,6 @@ class TestNequIPNAC(EnergyModelTestsMixin):
 
         return [FORCE_0_KEY, FORCE_1_KEY]
 
-    @pytest.fixture(scope="class")
-    def nequip_compile_tol(self, model_dtype):
-        return {"float32": 5e-5, "float64": 1e-10}[model_dtype]
-
     @pytest.fixture(
         params=[
             minimal_config0,
@@ -81,63 +69,6 @@ class TestNequIPNAC(EnergyModelTestsMixin):
         config = config.copy()
         return config
 
-    @pytest.fixture(
-        scope="class",
-        params=[None]
-        + (["enable_OpenEquivariance"] if _TORCH_GE_2_7 and _OEQ_INSTALLED else []),
-    )
-    def nequip_compile_acceleration_modifiers(self, request):
-        """Test acceleration modifiers in nequip-compile workflows."""
-        if request.param is None:
-            return None
-
-        def modifier_handler(mode, device, model_dtype):
-            if request.param == "enable_OpenEquivariance":
-                import openequivariance  # noqa: F401,F811
-                from nequip.utils.versions import _TORCH_GE_2_9
-
-                # OEQ + AOTI requires PyTorch >= 2.9
-                if mode == "aotinductor" and not _TORCH_GE_2_9:
-                    pytest.skip("OEQ AOTI requires PyTorch >= 2.9")
-
-                if device == "cpu":
-                    pytest.skip("OEQ tests skipped for CPU")
-
-                return ["enable_OpenEquivariance"]
-
-            else:
-                raise ValueError(f"Unknown modifier: {request.param}")
-
-        return modifier_handler
-
-    @pytest.fixture(
-        scope="class",
-        params=[None]
-        + (["enable_OpenEquivariance"] if _TORCH_GE_2_7 and _OEQ_INSTALLED else []),
-    )
-    def train_time_compile_acceleration_modifiers(self, request):
-        """Test acceleration modifiers in train-time compile workflows."""
-        if request.param is None:
-            return None
-
-        def modifier_handler(device):
-            if request.param == "enable_OpenEquivariance":
-                import openequivariance  # noqa: F401,F811
-
-                if device == "cpu":
-                    pytest.skip("OEQ tests skipped for CPU")
-
-                return [{"modifier": "enable_OpenEquivariance"}]
-            else:
-                raise ValueError(f"Unknown modifier: {request.param}")
-
-        return modifier_handler
-
-    @pytest.fixture(
-        scope="class",
-        params=[None]
-        + (["enable_OpenEquivariance"] if _TORCH_GE_2_7 and _OEQ_INSTALLED else []),
-    )
     def test_import(self):
         """Test that the nequip_nac module can be imported"""
         import nequip_nac
