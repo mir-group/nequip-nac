@@ -1,5 +1,5 @@
 # nequip-nac
-Predicting predicting non-adiabatic couplings (NACs) vectors with NequIP
+Predicting non-adiabatic couplings (NACs) vectors with NequIP.
 
 ## Install
 Create environment and install `torch`, e.g.
