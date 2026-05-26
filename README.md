@@ -1,3 +1,7 @@
+<p align="center">
+<img src="./nequip_nac_logo.png" width="65%" title="nequip-nac" alt="nequip-nac"/>
+</p>
+
 # nequip-nac
 Predicting non-adiabatic couplings (NACs) vectors with NequIP.
 
